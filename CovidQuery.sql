@@ -14,7 +14,10 @@ SELECT
 		ELSE ROUND((d.total_deaths/d.population) * 100, 3)
 	END AS "%_of_deaths"
 FROM Deaths d
-WHERE d.location = 'Costa Rica'
+WHERE d.location = 'Costa Rica';
+
+SELECT *
+FROM TrendCovidDeathsCostaRica;
 
 --Trend of cases during time
 CREATE VIEW TrendCovidCasesCostaRica AS
@@ -29,6 +32,9 @@ SELECT
 FROM Deaths d
 WHERE d.location LIKE 'costa%';
 
+SELECT *
+FROM TrendCovidCasesCostaRica;
+
 --Day with the most new cases reported
 SELECT TOP 1
 	d.location, 
@@ -42,7 +48,7 @@ ORDER BY d.new_cases DESC;
 -- GENERAL COUNTRIES DATA
 
 --% of infection rate by country
-CREATE VIEW InfectionRateByCountry AS
+ALTER VIEW InfectionRateByCountry AS
 WITH InfectionRateByCountry 
 AS
 (SELECT
@@ -50,7 +56,7 @@ AS
 	d.location, 
 	d.population, 
 	MAX(d.total_cases) max_cases,
-	ROUND(MAX((d.total_cases/d.population)) * 100, 2) "percent_infection_rate"
+	ROUND(MAX((CAST(d.total_cases AS FLOAT)/CAST(d.population AS FLOAT))) * 100, 2) "percent_infection_rate"
 FROM Deaths d
 WHERE d.continent IS NOT NULL
 GROUP BY d.location, d.population, d.continent)
@@ -65,7 +71,12 @@ SELECT
 		WHEN percent_infection_rate > 29 AND percent_infection_rate < 50 THEN 'MEDIUM RISK'
 		ELSE 'LOW RISK'
 	END AS risk_classification
+FROM InfectionRateByCountry;
+
+SELECT * 
 FROM InfectionRateByCountry
+WHERE continent LIKE 'North %'
+ORDER BY location
 
 
 SELECT TOP 10
@@ -123,7 +134,7 @@ JOIN Vaccines v
 	ON d.iso_code = v.iso_code AND d.date = v.date
 ORDER BY d.location, d.date
 
-CREATE VIEW VaccinationsPerCountry AS
+ALTER VIEW VaccinationsPerCountry AS
 SELECT 
 	d.location, 
 	d.date, 
@@ -133,10 +144,17 @@ SELECT
 		ELSE v.people_fully_vaccinated
 	END AS people_vaccinated,
 	CASE 
-		WHEN ROUND((v.people_fully_vaccinated/d.population) * 100, 2) IS NULL THEN 0
-		ELSE ROUND((v.people_fully_vaccinated/d.population) * 100, 2)
+		WHEN ROUND((CAST(v.people_fully_vaccinated AS FLOAT)/CAST(d.population AS FLOAT)) * 100, 2) IS NULL THEN 0
+		ELSE ROUND((CAST(v.people_fully_vaccinated AS FLOAT)/CAST(d.population AS FLOAT)) * 100, 2)
 	END AS "%_people vaccinated"
 FROM Deaths d
 JOIN Vaccines v
 	ON d.iso_code = v.iso_code AND d.date = v.date
 WHERE d.continent IS NOT NULL;
+
+SELECT * 
+FROM VaccinationsPerCountry
+
+
+SELECT *
+FROM DEATHS
